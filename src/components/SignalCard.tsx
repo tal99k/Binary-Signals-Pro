@@ -1,5 +1,5 @@
 import { TradingSignal } from '@/types/signals';
-import { TrendingUp, TrendingDown, Clock, Target, Lightbulb, Filter, CheckCircle } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock, Target, Lightbulb, Filter, CheckCircle, Activity, TrendingUp as TrendIcon } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -31,9 +31,9 @@ export function SignalCard({ signal }: SignalCardProps) {
         <Badge 
           variant="outline" 
           className={`${
-            signal.confidence >= 80 
+            signal.confidence >= 85 
               ? 'bg-green-500/20 text-green-400 border-green-500/50' 
-              : signal.confidence >= 70
+              : signal.confidence >= 75
               ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
               : 'bg-orange-500/20 text-orange-400 border-orange-500/50'
           }`}
@@ -68,10 +68,55 @@ export function SignalCard({ signal }: SignalCardProps) {
         </div>
       </div>
 
+      {/* Análise Técnica Avançada */}
+      {signal.technicalAnalysis && (
+        <div className="mb-3 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+          <div className="flex items-center gap-2 mb-2">
+            <Activity className="w-4 h-4 text-purple-400" />
+            <span className="text-sm font-semibold text-purple-300">Análise Técnica Completa</span>
+          </div>
+          <div className="grid grid-cols-2 gap-2 text-xs">
+            <div>
+              <span className="text-muted-foreground">Tendência:</span>
+              <span className={`ml-2 font-semibold ${
+                signal.technicalAnalysis.trend === 'ALTA' ? 'text-green-400' : 
+                signal.technicalAnalysis.trend === 'BAIXA' ? 'text-red-400' : 'text-yellow-400'
+              }`}>
+                {signal.technicalAnalysis.trend}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">ADX:</span>
+              <span className="ml-2 font-semibold text-purple-400">{signal.technicalAnalysis.adxStrength}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">RSI:</span>
+              <span className="ml-2 font-semibold text-blue-400">{signal.technicalAnalysis.rsiValue}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">MACD:</span>
+              <span className={`ml-2 font-semibold ${
+                signal.technicalAnalysis.macdSignal === 'COMPRA' ? 'text-green-400' : 'text-red-400'
+              }`}>
+                {signal.technicalAnalysis.macdSignal}
+              </span>
+            </div>
+            <div className="col-span-2">
+              <span className="text-muted-foreground">Fibonacci:</span>
+              <span className="ml-2 font-semibold text-yellow-400">{signal.technicalAnalysis.fibonacciLevel}</span>
+            </div>
+            <div className="col-span-2">
+              <span className="text-muted-foreground">S/R:</span>
+              <span className="ml-2 text-cyan-400">{signal.technicalAnalysis.supportResistance}</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="flex items-center gap-2 mb-3 p-2 bg-blue-500/10 border border-blue-500/30 rounded-lg">
         <CheckCircle className="w-4 h-4 text-blue-400" />
         <span className="text-xs text-blue-300">
-          Sinal gerado após fechamento completo da vela
+          Sinal gerado após análise completa do fechamento da vela
         </span>
       </div>
 
@@ -82,7 +127,7 @@ export function SignalCard({ signal }: SignalCardProps) {
             <span className="text-sm font-medium">Gatilhos Detectados</span>
           </div>
           <div className="flex flex-wrap gap-1">
-            {signal.triggers.slice(0, 3).map((trigger, idx) => (
+            {signal.triggers.slice(0, 4).map((trigger, idx) => (
               <Badge key={idx} variant="secondary" className="text-xs">
                 {trigger}
               </Badge>
@@ -96,7 +141,7 @@ export function SignalCard({ signal }: SignalCardProps) {
             <span className="text-sm font-medium">Filtros Aprovados</span>
           </div>
           <div className="flex flex-wrap gap-1">
-            {signal.filters.slice(0, 3).map((filter, idx) => (
+            {signal.filters.slice(0, 4).map((filter, idx) => (
               <Badge key={idx} variant="outline" className="text-xs">
                 {filter}
               </Badge>
@@ -106,12 +151,12 @@ export function SignalCard({ signal }: SignalCardProps) {
       </div>
 
       <div className="mt-3 p-2 bg-secondary/50 rounded text-xs text-muted-foreground">
-        <span className="font-medium">Análise: </span>
+        <span className="font-medium">Análise Completa: </span>
         {signal.reasoning}
       </div>
 
       <div className="mt-2 text-xs text-muted-foreground text-right">
-        Fonte: {signal.source}
+        <span className="font-semibold text-purple-400">PRISMA IA</span> • Análise Técnica Avançada
       </div>
     </Card>
   );

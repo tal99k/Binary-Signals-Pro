@@ -26,7 +26,7 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
     <Card className="m-4 p-4 bg-card/80 backdrop-blur border-primary/30 animate-fade-in-up">
       <h3 className="font-bold mb-4 flex items-center gap-2">
         <span className="w-2 h-2 bg-primary rounded-full"></span>
-        Configurações de Análise
+        Configurações de Análise Técnica
       </h3>
 
       {/* Asset Selection */}
@@ -39,7 +39,7 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
           className="bg-secondary/50 border-purple-500/30"
         />
         <p className="text-xs text-muted-foreground mt-1">
-          O robô detectará automaticamente o ativo que você está usando
+          O sistema detecta automaticamente o ativo em uso
         </p>
       </div>
 
@@ -62,7 +62,7 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
           ))}
         </div>
         <p className="text-xs text-muted-foreground mt-1">
-          Sincroniza com o cronômetro das velas - 1 sinal por vela
+          Sincroniza com cronômetro - 1 análise completa por vela
         </p>
       </div>
 
@@ -71,7 +71,7 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
         <div>
           <Label>Aguardar Fechamento da Vela</Label>
           <p className="text-xs text-muted-foreground">
-            Gera sinal apenas quando a vela fecha completamente
+            Análise técnica completa apenas após vela fechar
           </p>
         </div>
         <Switch
@@ -83,32 +83,43 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
       {/* Confidence Slider */}
       <div className="mb-4">
         <div className="flex items-center justify-between mb-2">
-          <Label>Confiança Mínima</Label>
+          <Label>Confiança Mínima (Confluências)</Label>
           <Badge variant="outline">{config.minConfidence}%</Badge>
         </div>
         <Slider
           value={[config.minConfidence]}
           onValueChange={([value]) => onConfigChange({ ...config, minConfidence: value })}
-          min={50}
+          min={70}
           max={95}
           step={5}
           className="w-full"
         />
+        <p className="text-xs text-muted-foreground mt-1">
+          Baseado em: EMAs, ADX, MACD, RSI, Fibonacci, Volume, Price Action
+        </p>
       </div>
 
       {/* Strategies */}
       <div>
-        <Label className="mb-2 block">Estratégias Ativas</Label>
-        <div className="space-y-2 max-h-48 overflow-y-auto pr-2">
+        <Label className="mb-2 block">Estratégias Ativas ({config.enabledStrategies.length}/{STRATEGIES.length})</Label>
+        <div className="space-y-2 max-h-64 overflow-y-auto pr-2">
           {STRATEGIES.map(strategy => (
             <div
               key={strategy.id}
-              className="flex items-center justify-between p-2 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
+              className="flex items-start justify-between p-3 rounded-lg bg-secondary/50 hover:bg-secondary transition-colors"
             >
-              <div className="flex-1">
-                <div className="font-medium text-sm">{strategy.name}</div>
-                <div className="text-xs text-muted-foreground">
-                  {strategy.channel} • Win Rate: {strategy.winRate}%
+              <div className="flex-1 mr-3">
+                <div className="font-medium text-sm mb-1">{strategy.name}</div>
+                <div className="text-xs text-muted-foreground mb-2">
+                  {strategy.description}
+                </div>
+                <div className="flex items-center gap-2">
+                  <Badge variant="outline" className="text-xs">
+                    PRISMA IA
+                  </Badge>
+                  <Badge variant="outline" className="text-xs bg-green-500/10 text-green-400 border-green-500/30">
+                    Win Rate: {strategy.winRate}%
+                  </Badge>
                 </div>
               </div>
               <Switch
@@ -118,6 +129,13 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
             </div>
           ))}
         </div>
+      </div>
+
+      <div className="mt-4 p-3 bg-purple-500/10 border border-purple-500/30 rounded-lg">
+        <p className="text-xs text-purple-300">
+          💡 <strong>Dica:</strong> Quanto mais estratégias ativas, mais oportunidades detectadas. 
+          Todas utilizam análise técnica profunda com múltiplos indicadores e confluências.
+        </p>
       </div>
     </Card>
   );
