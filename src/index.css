@@ -1,0 +1,93 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 270 50% 10%;
+    --foreground: 270 10% 95%;
+
+    --card: 270 40% 15%;
+    --card-foreground: 270 10% 95%;
+
+    --popover: 270 40% 15%;
+    --popover-foreground: 270 10% 95%;
+
+    --primary: 270 70% 60%;
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 270 30% 20%;
+    --secondary-foreground: 270 10% 95%;
+
+    --muted: 270 30% 20%;
+    --muted-foreground: 270 20% 65%;
+
+    --accent: 280 70% 55%;
+    --accent-foreground: 0 0% 100%;
+
+    --destructive: 0 70% 60%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 270 30% 25%;
+    --input: 270 30% 25%;
+    --ring: 270 70% 60%;
+
+    --radius: 0.5rem;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  }
+
+  /* Scrollbar personalizada */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    @apply bg-secondary;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    @apply bg-primary rounded-full;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-accent;
+  }
+}
+
+/* Efeito de brilho neon */
+.neon-glow {
+  box-shadow: 0 0 20px rgba(168, 85, 247, 0.5),
+              0 0 40px rgba(168, 85, 247, 0.3);
+}
+
+.neon-text {
+  text-shadow: 0 0 10px rgba(168, 85, 247, 0.8),
+               0 0 20px rgba(168, 85, 247, 0.5);
+}
+
+/* Animação de entrada */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.5s ease-out;
+}
