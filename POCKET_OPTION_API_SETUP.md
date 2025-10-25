@@ -60,7 +60,7 @@ async def health_check():
 
 @app.get("/otc")
 async def get_otc():
-    """Retorna todos os pares OTC disponíveis"""
+    """Retorna todos os pares OTC disponíveis com payout"""
     try:
         markets = await po.get_markets()
         otc_pairs = [
@@ -69,11 +69,12 @@ async def get_otc():
                 "name": m.get("name", ""),
                 "type": m.get("type", "otc"),
                 "active": m.get("active", True),
-                "category": m.get("category", "forex")
+                "category": m.get("category", "forex"),
+                "payout": m.get("payout", 85)  # Percentual de payout (85-95%)
             }
-            for m in markets if m.get("type") == "otc"
+            for m in markets if m.get("type") == "otc" and m.get("payout", 0) >= 85
         ]
-        print(f"📊 Retornando {len(otc_pairs)} pares OTC")
+        print(f"📊 Retornando {len(otc_pairs)} pares OTC com payout >= 85%")
         return otc_pairs
     except Exception as e:
         print(f"❌ Erro ao buscar pares OTC: {e}")

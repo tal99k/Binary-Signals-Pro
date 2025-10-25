@@ -6,6 +6,7 @@ export type OTCMarket = {
   type: string;
   active: boolean;
   category?: string;
+  payout?: number; // Percentual de payout (85-95%)
 };
 
 export type OTCCandle = {
@@ -27,11 +28,31 @@ export async function getOtcPairs(): Promise<OTCMarket[]> {
   try {
     const response = await axios.get<OTCMarket[]>(`${API_URL}/otc`);
     console.log('📊 Pares OTC carregados:', response.data.length);
-    return response.data;
+    
+    // Filtra pares com payout >= 85%
+    const filteredPairs = response.data.filter(pair => {
+      const payout = pair.payout || 0;
+      return payout >= 85;
+    });
+    
+    console.log(`✅ ${filteredPairs.length} pares com payout >= 85%`);
+    return filteredPairs.length > 0 ? filteredPairs : response.data;
   } catch (error) {
     console.error('❌ Erro ao buscar pares OTC:', error);
-    // Retorna pares padrão em caso de erro
     return getDefaultOtcPairs();
+  }
+}
+
+/**
+ * Busca informações detalhadas de um par específico
+ */
+export async function getPairDetails(symbol: string): Promise<OTCMarket | null> {
+  try {
+    const pairs = await getOtcPairs();
+    return pairs.find(p => p.symbol === symbol) || null;
+  } catch (error) {
+    console.error(`❌ Erro ao buscar detalhes de ${symbol}:`, error);
+    return null;
   }
 }
 
