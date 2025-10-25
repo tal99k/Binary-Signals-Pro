@@ -4,7 +4,10 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Slider } from '@/components/ui/slider';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { useOtcPairs } from '@/hooks/useOtcPairs';
+import { RefreshCw } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 interface ConfigPanelProps {
   config: AnalysisConfig;
@@ -13,6 +16,7 @@ interface ConfigPanelProps {
 
 export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
   const timeframes: Array<'1m' | '2m' | '3m' | '5m'> = ['1m', '2m', '3m', '5m'];
+  const { pairs, loading: loadingPairs, apiAvailable, refreshPairs } = useOtcPairs();
 
   const toggleStrategy = (strategyId: string) => {
     const newStrategies = config.enabledStrategies.includes(strategyId)
@@ -31,16 +35,55 @@ export function ConfigPanel({ config, onConfigChange }: ConfigPanelProps) {
 
       {/* Asset Selection */}
       <div className="mb-4">
-        <Label className="mb-2 block">Ativo Atual na Pocket Option</Label>
-        <Input
+        <div className="flex items-center justify-between mb-2">
+          <Label>Ativo Atual na Pocket Option</Label>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={refreshPairs}
+            disabled={loadingPairs}
+            className="h-7 px-2 border-purple-500/30"
+          >
+            <RefreshCw className={`w-3 h-3 ${loadingPairs ? 'animate-spin' : ''}`} />
+          </Button>
+        </div>
+        
+        <Select
           value={config.currentAsset}
-          onChange={(e) => onConfigChange({ ...config, currentAsset: e.target.value })}
-          placeholder="Ex: AUD/CAD OTC"
-          className="bg-secondary/50 border-purple-500/30"
-        />
-        <p className="text-xs text-muted-foreground mt-1">
-          O sistema detecta automaticamente o ativo em uso
-        </p>
+          onValueChange={(value) => onConfigChange({ ...config, currentAsset: value })}
+        >
+          <SelectTrigger className="bg-secondary/50 border-purple-500/30">
+            <SelectValue placeholder="Selecione um par OTC" />
+          </SelectTrigger>
+          <SelectContent className="max-h-[300px]">
+            {pairs.map((pair) => (
+              <SelectItem key={pair.symbol} value={pair.name}>
+                {pair.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        <div className="flex items-center gap-2 mt-2">
+          {apiAvailable ? (
+            <Badge variant="outline" className="text-xs bg-green-500/10 text-green-400 border-green-500/30">
+              ✓ API Conectada
+            </Badge>
+          ) : (
+            <Badge variant="outline" className="text-xs bg-yellow-500/10 text-yellow-400 border-yellow-500/30">
+              ⚠ Usando pares padrão
+            </Badge>
+          )}
+          <span className="text-xs text-muted-foreground">
+            {pairs.length} pares disponíveis
+          </span>
+        </div>
+
+        {!apiAvailable && (
+          <p className="text-xs text-yellow-400 mt-1 bg-yellow-500/10 p-2 rounded border border-yellow-500/30">
+            💡 Para conectar API real: rode <code className="font-mono">python main.py</code> na pasta pocketoption_api
+          </p>
+        )}
       </div>
 
       {/* Timeframe Selection */}
