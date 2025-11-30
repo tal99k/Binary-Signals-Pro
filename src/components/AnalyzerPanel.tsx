@@ -19,6 +19,7 @@ import { ConfigPanel } from './ConfigPanel';
 import { MultiPairSelector } from './MultiPairSelector';
 import { TradingSignal, AnalysisConfig, STRATEGIES } from '@/types/signals';
 import { useMultiPairAnalysis } from '@/hooks/useMultiPairAnalysis';
+import { analyzeBinaryOptions1M, detectCandleTimer, predictNextCandle } from '@/lib/binaryOptionsAnalysis';
 
 export function AnalyzerPanel() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -61,11 +62,23 @@ export function AnalyzerPanel() {
   const analyzeCandle = (pairName: string) => {
     console.log(`📸 Capturando contexto completo do gráfico de ${pairName}...`);
     console.log('📊 Lendo estrutura de velas: corpo, pavios, força...');
+    console.log('⏰ Detectando cronômetro e timing da vela...');
     console.log('🔍 Identificando zonas de oferta/demanda...');
     console.log('💡 Detectando manipulação e players institucionais...');
     console.log('📈 Calculando indicadores: EMA50/200, ADX, MACD, RSI...');
     console.log('🎯 Buscando confluências: Fibonacci + S/R + Volume...');
     
+    if (!currentCandle) return;
+
+    // 🆕 ANÁLISE AVANÇADA DE OPÇÕES BINÁRIAS COM CORPO E TIMING
+    const { open, high, low, close, volume, secondsRemaining } = currentCandle;
+    
+    if (!open || !high || !low || !close || !volume) {
+      console.log('⚠️ Dados OHLC incompletos');
+      return;
+    }
+
+    const averageVolume = 3000; // Em produção, calcular média real
     const randomStrategy = STRATEGIES[Math.floor(Math.random() * STRATEGIES.length)];
     
     const baseConfidence = 70;
@@ -74,6 +87,39 @@ export function AnalyzerPanel() {
     const macdBonus = Math.random() > 0.5 ? 3 : 0;
     const volumeBonus = Math.random() > 0.6 ? 3 : 0;
     const fibonacciBonus = Math.random() > 0.3 ? 5 : 0;
+    
+    const totalConfidence = Math.min(95, baseConfidence + emaBonus + adxBonus + macdBonus + volumeBonus + fibonacciBonus);
+
+    // 🆕 ANÁLISE COMPLETA DE OPÇÕES BINÁRIAS 1M
+    const trend = emaBonus > 0 ? (Math.random() > 0.5 ? 'ALTA' : 'BAIXA') : 'LATERAL';
+    const binaryAnalysis = analyzeBinaryOptions1M(
+      open,
+      high,
+      low,
+      close,
+      volume,
+      averageVolume,
+      secondsRemaining,
+      totalConfidence,
+      trend
+    );
+
+    console.log('⏰ ANÁLISE DE CRONÔMETRO:');
+    console.log(`   Segundos restantes: ${secondsRemaining}s`);
+    console.log(`   Status da vela: ${currentCandle.status}`);
+    console.log(`   Progresso: ${currentCandle.progress?.toFixed(1)}%`);
+    console.log('');
+    console.log('📊 ANÁLISE DE CORPO E PAVIOS:');
+    console.log(`   Corpo: ${binaryAnalysis.candle.bodySize.toFixed(1)}%`);
+    console.log(`   Pavio Superior: ${binaryAnalysis.candle.upperWickSize.toFixed(1)}%`);
+    console.log(`   Pavio Inferior: ${binaryAnalysis.candle.lowerWickSize.toFixed(1)}%`);
+    console.log(`   Força: ${binaryAnalysis.candle.strength}`);
+    console.log(`   Padrão: ${binaryAnalysis.candle.pattern}`);
+    console.log('');
+    console.log('⏰ ANÁLISE DE TIMING:');
+    console.log(`   ${binaryAnalysis.timing.reasoning}`);
+    console.log(`   Urgência: ${binaryAnalysis.timing.urgency}`);
+    console.log(`   Confiança do timing: ${binaryAnalysis.timing.confidence}%`);
     
     const totalConfidence = Math.min(95, baseConfidence + emaBonus + adxBonus + macdBonus + volumeBonus + fibonacciBonus);
     
@@ -108,9 +154,9 @@ export function AnalyzerPanel() {
         expirationTime: config.timeframe,
         confidence: totalConfidence,
         strategy: randomStrategy.name,
-        triggers: randomStrategy.triggers.slice(0, 4),
-        filters: randomStrategy.filters.slice(0, 4),
-        reasoning: `Confluência técnica detectada: ${
+        triggers: binaryAnalysis.triggers,
+        filters: binaryAnalysis.filters,
+        reasoning: `${binaryAnalysis.timing.reasoning} | Confluência técnica: ${
           emaBonus > 0 ? 'EMAs alinhadas, ' : ''
         }${adxBonus > 0 ? `ADX forte (${technicalAnalysis.adxStrength}), ` : ''}${
           macdBonus > 0 ? 'MACD confirmado, ' : ''
@@ -120,14 +166,29 @@ export function AnalyzerPanel() {
         source: 'PRISMA IA',
         candleId: currentCandle!.id,
         candleCloseTime: currentCandle!.closeTime.toLocaleTimeString('pt-BR'),
-        technicalAnalysis
+        technicalAnalysis,
+        // 🆕 Dados de timing e corpo
+        entryTiming: binaryAnalysis.timing.entryTiming,
+        timingReasoning: binaryAnalysis.timing.reasoning,
+        urgency: binaryAnalysis.timing.urgency,
+        candleBodyAnalysis: {
+          bodySize: binaryAnalysis.candle.bodySize,
+          upperWickSize: binaryAnalysis.candle.upperWickSize,
+          lowerWickSize: binaryAnalysis.candle.lowerWickSize,
+          strength: binaryAnalysis.candle.strength,
+          pattern: binaryAnalysis.candle.pattern
+        },
+        winProbability: binaryAnalysis.winProbability
       };
 
       console.log('✅ SINAL GERADO COM ANÁLISE TÉCNICA COMPLETA!');
       console.log('📍 Par:', pairName);
       console.log('📍 Direção:', direction);
       console.log('💪 Confiança:', totalConfidence + '%');
+      console.log('🎯 Win Probability:', binaryAnalysis.winProbability + '%');
+      console.log('⏰ Timing:', binaryAnalysis.timing.entryTiming);
       console.log('🎯 Estratégia:', randomStrategy.name);
+      console.log('📊 Padrão da Vela:', binaryAnalysis.candle.pattern);
       
       setSignals(prev => [newSignal, ...prev].slice(0, 50));
     }
@@ -221,19 +282,44 @@ export function AnalyzerPanel() {
           </Badge>
 
           {isAnalyzing && currentCandle && (
-            <Badge 
-              className={`px-3 py-1 ${
-                currentCandle.isClosed 
-                  ? 'bg-green-500/20 text-green-400 border-green-500/50 animate-pulse' 
-                  : 'bg-blue-500/20 text-blue-400 border-blue-500/50'
-              }`}
-            >
-              <Zap className="w-3 h-3 mr-1" />
-              {currentCandle.isClosed 
-                ? 'Analisando...' 
-                : `Próxima: ${formatTime(currentCandle.secondsRemaining)}`
-              }
-            </Badge>
+            <>
+              <Badge 
+                className={`px-3 py-1 ${
+                  currentCandle.isClosed 
+                    ? 'bg-green-500/20 text-green-400 border-green-500/50 animate-pulse' 
+                    : 'bg-blue-500/20 text-blue-400 border-blue-500/50'
+                }`}
+              >
+                <Zap className="w-3 h-3 mr-1" />
+                {currentCandle.isClosed 
+                  ? 'Analisando...' 
+                  : `Próxima: ${formatTime(currentCandle.secondsRemaining)}`
+                }
+              </Badge>
+              
+              {currentCandle.status && (
+                <Badge 
+                  variant="outline" 
+                  className={`px-3 py-1 ${
+                    currentCandle.status === 'INICIO' ? 'border-green-500/50 text-green-400' :
+                    currentCandle.status === 'MEIO' ? 'border-blue-500/50 text-blue-400' :
+                    currentCandle.status === 'FINAL' ? 'border-orange-500/50 text-orange-400' :
+                    'border-red-500/50 text-red-400'
+                  }`}
+                >
+                  {currentCandle.status === 'INICIO' && '🟢 Início'}
+                  {currentCandle.status === 'MEIO' && '🔵 Meio'}
+                  {currentCandle.status === 'FINAL' && '🟠 Final'}
+                  {currentCandle.status === 'FECHADA' && '🔴 Fechada'}
+                </Badge>
+              )}
+
+              {currentCandle.progress !== undefined && (
+                <Badge variant="outline" className="px-3 py-1 border-purple-500/30">
+                  📊 {currentCandle.progress.toFixed(0)}%
+                </Badge>
+              )}
+            </>
           )}
         </div>
       </div>

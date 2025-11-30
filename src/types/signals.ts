@@ -15,6 +15,18 @@ export interface TradingSignal {
   candleId: string;
   candleCloseTime: string;
   technicalAnalysis: TechnicalAnalysis;
+  // 🆕 Análise de Timing e Corpo
+  entryTiming?: 'VELA_ATUAL' | 'PROXIMA_VELA' | 'AGUARDAR';
+  timingReasoning?: string;
+  urgency?: 'ALTA' | 'MEDIA' | 'BAIXA';
+  candleBodyAnalysis?: {
+    bodySize: number;
+    upperWickSize: number;
+    lowerWickSize: number;
+    strength: 'FORTE' | 'MODERADA' | 'FRACA';
+    pattern: string;
+  };
+  winProbability?: number;
 }
 
 export interface TechnicalAnalysis {
@@ -41,6 +53,15 @@ export interface CandleInfo {
   timeframe: string;
   secondsRemaining: number;
   isClosed: boolean;
+  // 🆕 Dados OHLC para análise de corpo
+  open?: number;
+  high?: number;
+  low?: number;
+  close?: number;
+  volume?: number;
+  // 🆕 Status do cronômetro
+  progress?: number;
+  status?: 'INICIO' | 'MEIO' | 'FINAL' | 'FECHADA';
 }
 
 export interface Strategy {

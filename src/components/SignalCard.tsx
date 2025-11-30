@@ -1,5 +1,5 @@
 import { TradingSignal } from '@/types/signals';
-import { TrendingUp, TrendingDown, Clock, Target, Lightbulb, Filter, CheckCircle, Activity, TrendingUp as TrendIcon } from 'lucide-react';
+import { TrendingUp, TrendingDown, Clock, Target, Lightbulb, Filter, CheckCircle, Activity, AlertCircle, Zap } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 
@@ -28,18 +28,34 @@ export function SignalCard({ signal }: SignalCardProps) {
             <p className="text-sm text-muted-foreground">{signal.strategy}</p>
           </div>
         </div>
-        <Badge 
-          variant="outline" 
-          className={`${
-            signal.confidence >= 85 
-              ? 'bg-green-500/20 text-green-400 border-green-500/50' 
-              : signal.confidence >= 75
-              ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
-              : 'bg-orange-500/20 text-orange-400 border-orange-500/50'
-          }`}
-        >
-          {signal.confidence}% confiança
-        </Badge>
+        <div className="flex flex-col items-end gap-1">
+          <Badge 
+            variant="outline" 
+            className={`${
+              signal.confidence >= 85 
+                ? 'bg-green-500/20 text-green-400 border-green-500/50' 
+                : signal.confidence >= 75
+                ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50'
+                : 'bg-orange-500/20 text-orange-400 border-orange-500/50'
+            }`}
+          >
+            {signal.winProbability || signal.confidence}% win
+          </Badge>
+          {signal.entryTiming && (
+            <Badge 
+              variant="outline"
+              className={`text-xs ${
+                signal.entryTiming === 'VELA_ATUAL' ? 'bg-green-500/20 text-green-400 border-green-500/50 animate-pulse' :
+                signal.entryTiming === 'PROXIMA_VELA' ? 'bg-yellow-500/20 text-yellow-400 border-yellow-500/50' :
+                'bg-red-500/20 text-red-400 border-red-500/50'
+              }`}
+            >
+              {signal.entryTiming === 'VELA_ATUAL' && '⚡ ENTRAR AGORA'}
+              {signal.entryTiming === 'PROXIMA_VELA' && '⏳ PRÓXIMA VELA'}
+              {signal.entryTiming === 'AGUARDAR' && '⏸️ AGUARDAR'}
+            </Badge>
+          )}
+        </div>
       </div>
 
       <div className="grid grid-cols-2 gap-3 mb-3">
@@ -67,6 +83,68 @@ export function SignalCard({ signal }: SignalCardProps) {
           <span className="text-sm font-mono">{signal.entryPrice}</span>
         </div>
       </div>
+
+      {/* Candle Body Analysis */}
+      {signal.candleBodyAnalysis && (
+        <div className="mt-3 p-3 bg-blue-500/10 rounded-lg border border-blue-500/20 mb-3">
+          <h4 className="text-xs font-semibold mb-2 text-blue-300 flex items-center gap-2">
+            <Activity className="w-3 h-3" />
+            Análise de Corpo e Pavios
+          </h4>
+          <div className="grid grid-cols-2 gap-2 text-xs text-blue-200">
+            <div>
+              <span className="text-muted-foreground">Padrão:</span>
+              <span className="ml-1 font-medium text-white">{signal.candleBodyAnalysis.pattern}</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Força:</span>
+              <span className={`ml-1 font-medium ${
+                signal.candleBodyAnalysis.strength === 'FORTE' ? 'text-green-400' :
+                signal.candleBodyAnalysis.strength === 'MODERADA' ? 'text-yellow-400' :
+                'text-red-400'
+              }`}>
+                {signal.candleBodyAnalysis.strength}
+              </span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Corpo:</span>
+              <span className="ml-1 font-medium text-white">{signal.candleBodyAnalysis.bodySize.toFixed(1)}%</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Pavio Sup:</span>
+              <span className="ml-1 font-medium text-white">{signal.candleBodyAnalysis.upperWickSize.toFixed(1)}%</span>
+            </div>
+            <div>
+              <span className="text-muted-foreground">Pavio Inf:</span>
+              <span className="ml-1 font-medium text-white">{signal.candleBodyAnalysis.lowerWickSize.toFixed(1)}%</span>
+            </div>
+            {signal.urgency && (
+              <div>
+                <span className="text-muted-foreground">Urgência:</span>
+                <span className={`ml-1 font-medium ${
+                  signal.urgency === 'ALTA' ? 'text-red-400' :
+                  signal.urgency === 'MEDIA' ? 'text-yellow-400' :
+                  'text-green-400'
+                }`}>
+                  {signal.urgency}
+                </span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Timing Reasoning */}
+      {signal.timingReasoning && (
+        <div className="mt-2 p-3 bg-yellow-500/10 rounded-lg border border-yellow-500/20 mb-3">
+          <div className="flex items-start gap-2">
+            <Zap className="w-4 h-4 text-yellow-400 mt-0.5 flex-shrink-0" />
+            <p className="text-xs text-yellow-200">
+              <span className="font-medium text-white">{signal.timingReasoning}</span>
+            </p>
+          </div>
+        </div>
+      )}
 
       {/* Análise Técnica Avançada */}
       {signal.technicalAnalysis && (
@@ -109,6 +187,10 @@ export function SignalCard({ signal }: SignalCardProps) {
               <span className="text-muted-foreground">S/R:</span>
               <span className="ml-2 text-cyan-400">{signal.technicalAnalysis.supportResistance}</span>
             </div>
+            <div className="col-span-2">
+              <span className="text-muted-foreground">Price Action:</span>
+              <span className="ml-2 text-purple-300">{signal.technicalAnalysis.priceAction}</span>
+            </div>
           </div>
         </div>
       )}
@@ -127,7 +209,7 @@ export function SignalCard({ signal }: SignalCardProps) {
             <span className="text-sm font-medium">Gatilhos Detectados</span>
           </div>
           <div className="flex flex-wrap gap-1">
-            {signal.triggers.slice(0, 4).map((trigger, idx) => (
+            {signal.triggers.slice(0, 6).map((trigger, idx) => (
               <Badge key={idx} variant="secondary" className="text-xs">
                 {trigger}
               </Badge>
@@ -141,7 +223,7 @@ export function SignalCard({ signal }: SignalCardProps) {
             <span className="text-sm font-medium">Filtros Aprovados</span>
           </div>
           <div className="flex flex-wrap gap-1">
-            {signal.filters.slice(0, 4).map((filter, idx) => (
+            {signal.filters.slice(0, 6).map((filter, idx) => (
               <Badge key={idx} variant="outline" className="text-xs">
                 {filter}
               </Badge>
@@ -156,7 +238,7 @@ export function SignalCard({ signal }: SignalCardProps) {
       </div>
 
       <div className="mt-2 text-xs text-muted-foreground text-right">
-        <span className="font-semibold text-purple-400">PRISMA IA</span> • Análise Técnica Avançada
+        <span className="font-semibold text-purple-400">PRISMA IA</span> • Análise Técnica Avançada • Opções Binárias 1M
       </div>
     </Card>
   );

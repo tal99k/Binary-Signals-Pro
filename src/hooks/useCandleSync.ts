@@ -5,63 +5,69 @@ export function useCandleSync(timeframe: '1m' | '2m' | '3m' | '5m') {
   const [currentCandle, setCurrentCandle] = useState<CandleInfo | null>(null);
   const [analyzedCandles, setAnalyzedCandles] = useState<Set<string>>(new Set());
 
-  const timeframeMinutes = parseInt(timeframe);
-
-  const calculateCandleInfo = useCallback((): CandleInfo => {
-    const now = new Date();
-    const currentMinute = now.getMinutes();
-    const currentSecond = now.getSeconds();
-    
-    // Calculate which candle we're in
-    const candleIndex = Math.floor(currentMinute / timeframeMinutes);
-    const candleStartMinute = candleIndex * timeframeMinutes;
-    
-    // Calculate open and close times
-    const openTime = new Date(now);
-    openTime.setMinutes(candleStartMinute, 0, 0);
-    
-    const closeTime = new Date(openTime);
-    closeTime.setMinutes(candleStartMinute + timeframeMinutes, 0, 0);
-    
-    // Calculate seconds remaining
-    const totalSeconds = (closeTime.getTime() - now.getTime()) / 1000;
-    const secondsRemaining = Math.max(0, Math.floor(totalSeconds));
-    
-    // Check if candle is closed (last 5 seconds or closed)
-    const isClosed = secondsRemaining <= 5;
-    
-    // Generate unique candle ID
-    const candleId = `${openTime.getTime()}-${timeframe}`;
-    
-    return {
-      id: candleId,
-      openTime,
-      closeTime,
-      timeframe,
-      secondsRemaining,
-      isClosed
-    };
-  }, [timeframe, timeframeMinutes]);
-
   useEffect(() => {
     const updateCandle = () => {
-      const candleInfo = calculateCandleInfo();
-      setCurrentCandle(candleInfo);
+      const now = new Date();
+      const timeframeMs = parseInt(timeframe) * 60 * 1000;
       
-      console.log('🕐 Cronômetro da Vela:', {
-        timeframe: candleInfo.timeframe,
-        tempoRestante: `${Math.floor(candleInfo.secondsRemaining / 60)}:${(candleInfo.secondsRemaining % 60).toString().padStart(2, '0')}`,
-        velaFechada: candleInfo.isClosed,
-        proximaAnalise: candleInfo.isClosed && !analyzedCandles.has(candleInfo.id)
+      // Calcula início da vela atual
+      const currentMs = now.getTime();
+      const candleStartMs = Math.floor(currentMs / timeframeMs) * timeframeMs;
+      const candleEndMs = candleStartMs + timeframeMs;
+      
+      const openTime = new Date(candleStartMs);
+      const closeTime = new Date(candleEndMs);
+      const secondsRemaining = Math.floor((candleEndMs - currentMs) / 1000);
+      
+      const candleId = `${timeframe}-${candleStartMs}`;
+      const isClosed = secondsRemaining <= 0;
+
+      // 🆕 Calcular progresso e status
+      const elapsed = currentMs - candleStartMs;
+      const progress = (elapsed / timeframeMs) * 100;
+      
+      let status: 'INICIO' | 'MEIO' | 'FINAL' | 'FECHADA' = 'MEIO';
+      if (isClosed) {
+        status = 'FECHADA';
+      } else if (progress < 20) {
+        status = 'INICIO';
+      } else if (progress > 80) {
+        status = 'FINAL';
+      }
+
+      // 🆕 Simular dados OHLC (em produção, viria da API)
+      const basePrice = 0.91735;
+      const volatility = 0.0001;
+      const randomChange = (Math.random() - 0.5) * volatility;
+      
+      const open = basePrice + randomChange;
+      const high = open + Math.random() * volatility;
+      const low = open - Math.random() * volatility;
+      const close = low + Math.random() * (high - low);
+      const volume = Math.floor(1000 + Math.random() * 5000);
+
+      setCurrentCandle({
+        id: candleId,
+        openTime,
+        closeTime,
+        timeframe,
+        secondsRemaining: Math.max(0, secondsRemaining),
+        isClosed,
+        open,
+        high,
+        low,
+        close,
+        volume,
+        progress,
+        status
       });
     };
 
-    // Update every second
     updateCandle();
     const interval = setInterval(updateCandle, 1000);
 
     return () => clearInterval(interval);
-  }, [timeframe, calculateCandleInfo, analyzedCandles]);
+  }, [timeframe]);
 
   const markCandleAnalyzed = useCallback((candleId: string) => {
     setAnalyzedCandles(prev => new Set([...prev, candleId]));
