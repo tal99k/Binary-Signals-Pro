@@ -121,8 +121,6 @@ export function AnalyzerPanel() {
     console.log(`   Urgência: ${binaryAnalysis.timing.urgency}`);
     console.log(`   Confiança do timing: ${binaryAnalysis.timing.confidence}%`);
     
-    const totalConfidence = Math.min(95, baseConfidence + emaBonus + adxBonus + macdBonus + volumeBonus + fibonacciBonus);
-    
     if (totalConfidence >= config.minConfidence && config.enabledStrategies.includes(randomStrategy.id)) {
       const direction: 'CALL' | 'PUT' = Math.random() > 0.5 ? 'CALL' : 'PUT';
       const entryPrice = 0.91735 + (Math.random() - 0.5) * 0.001;
